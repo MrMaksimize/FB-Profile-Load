@@ -1,0 +1,4 @@
+; $Id: fb_profile_load.info,v 1.2 2009/09/20 14:01:06 markuspetrux Exp $
+name = FB Profile Load
+core = 6.x
+description = Takes data from connected Facebook User and Loads it into the site db;

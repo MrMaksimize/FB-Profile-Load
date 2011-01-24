@@ -1,0 +1,97 @@
+<?php
+ module_load_include('module', 'fb_user');
+function fb_profile_load_form_alter(&$form, &$form_state, $form_id) {
+    // Add name and email to some forms.
+  if (isset($GLOBALS['_fb'])) {
+    $fb = $GLOBALS['_fb'];
+    if (($form_id == 'uprofile_node_form' /*&& variable_get(FB_USER_VAR_ALTER_REGISTER, TRUE)*/)) {
+      if ($fbu = fb_facebook_user()) {
+        // Facebook user has authorized app.
+
+          if ($form_id == 'uprofile_node_form') {
+          // Provide defaults for name and email.
+          if ($data = _fb_user_facebook_data($fb)) {
+            $form['fb_user']['#fb_user'] = $data;
+			dsm($data);
+if (isset($form['field_uprofile_name']) && !$form['field_uprofile_name']['0']['#default_value']['value']){
+			$form['field_uprofile_name']['0']['#default_value']['value'] = $data['name'];
+			}  //populate name
+			
+if (isset($form['field_uprofile_dob']) && !$form['field_uprofile_dob']['0']['#default_value']['value']){
+			$bday = $data['birthday'];
+			//$bday = str_replace('/', '-', $bday);
+			$mo = substr($bday, 0, 2);
+			$day = substr($bday, 3, 2);
+			$yr = substr($bday, 6, 4);
+			//1987-03-13 00:00:00
+			$bday = $yr."-".$mo."-".$day." 00:00:00";
+			$bday2=strtotime($bday);
+			$today = time();
+			$age = $today - $bday2;
+			$age = ((((($age/60)/60)/24)/30)/12);
+			$ages = "t";
+			//$age = intval($age);
+			dsm($age);
+			
+			if ($age < 13){
+			$ages = "Less Than 13";
+			}
+			else if($age >= 13 && $age < 18){
+			$ages = "13-18";
+			}
+			else if($age >= 18 && $age < 24){
+			$ages = "18-24";
+			}
+			else if($age >= 24 && $age < 50){
+			$ages = "24-50";
+			}
+			else{
+			$ages = "50+";
+			}
+			
+						
+			dsm($ages);
+			
+			$form['field_uprofile_dob']['0']['#default_value']['value'] = $bday;
+			$form['field_uprofile_agerange']['#default_value']['0']['value'] = $ages;
+			}//dob
+			
+if (isset($form['field_occupation']) && !$form['field_occupation']['0']['#default_value']['value']){
+			$form['field_occupation']['0']['#default_value']['value'] = $data['work']['0']['position']['name'];
+			}  //position
+			
+if (isset($form['field_uprofile_gender']) && !$form['field_uprofile_gender']['#default_value']['0']['value']){
+			$form['field_uprofile_gender']['#default_value']['0']['value'] = ucfirst($data['gender']);
+			}  //position
+			
+						
+			
+          }
+        } 
+      }
+
+      else {
+        // facebook user has not authorized app.
+        $fb_button = theme('fb_login_button', t(_fb_user_button_text($form_id)), array('form_id' => $form_id));
+        $form['fb_user'] = array(
+          '#value' => $fb_button,
+          '#type' => 'markup',
+          '#weight' => -1,  // Ideally, we'd put ourself next to openid login, but doesn't look right when next to form buttons.
+          '#prefix' => '<div class="fb-login-button">',
+          '#suffix' => '</div>',
+        );
+      }
+    }
+    elseif ($form_id == 'contact_mail_page' && variable_get(FB_USER_VAR_ALTER_CONTACT, TRUE)) {
+      if ($data = _fb_user_facebook_data($fb)) {
+        if (!$form['name']['#default_value'] || strpos($form['name']['#default_value'], '@facebook')) {
+          $form['name']['#default_value'] = $data['name'];
+        }
+        if (!$form['mail']['#default_value']) {
+          $form['mail']['#default_value'] = $data['email'];
+        }
+      }
+    }dsm($form);
+  }
+
+}
